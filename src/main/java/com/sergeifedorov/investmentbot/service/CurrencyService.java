@@ -30,35 +30,61 @@ public class CurrencyService {
 
     private final PropertyValues propertyValues;
     private InvestApi api;
-    //%
-    private Double commission = 0.3;
-    //%
-    private Double tax = 13.0;
+
+    // Комиссия брокера
+    private static final Double COMMISSION = 0.3;
+
+    // Налог
+    private static final Double TAX = 13.0;
+
+    // Точность чисел
+    private static final int SCALE = 9;
+
+    // Частота среднего значения
+    // Высокая частота замедляет работу программы, но дает высокую точность среднего значения
+    private static final CandleInterval candleInterval = CandleInterval.CANDLE_INTERVAL_1_MIN;
+    //todo сделать пару между интервалом и сроком линий Cut
+
+    // Кол-во одинаковых операций подряд (купил...купил...купил...)
+    private static final short maxStreak = 2;
+    private static final short countStreak = 0;
+
+    // Уровень ожидаемого дохода %
+    // Чем выше уровень, тем реже будут сделки
+    private static final double tacticLvl = 5.0;
+
+    private static final double minProfit = (COMMISSION * 3.0) + TAX + tacticLvl;
+
+
+
+    public void tradeTick() {
+        LocalDateTime nowDateTime = LocalDateTime.now();
+        double shortCut = getAverage(nowDateTime.minusDays(1), nowDateTime, candleInterval).doubleValue();
+        double longCut = getAverage(nowDateTime.minusDays(10), nowDateTime, candleInterval).doubleValue();
+
+        if (longCut > (shortCut * minProfit)) {
+            //продаем
+            return;
+        }
+        if ((shortCut * minProfit) > longCut) {
+            //покупаем
+            return;
+        }
+        // Находимся в коридоре, сделок не было
+    }
 
     @SneakyThrows
     public BigDecimal getAverage(LocalDateTime start, LocalDateTime end, CandleInterval interval) {
-        List<HistoricCandle> historicCandles = api.getMarketDataService().getCandles(propertyValues.getFigi().stream().findFirst().get(), start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), interval).get();
-        List<BigDecimal> collect = historicCandles.stream()
+        List<HistoricCandle> historicCandles = api.getMarketDataService().getCandles(
+                propertyValues.getFigi().stream().findFirst().get(), start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), interval).get();
+
+        BigDecimal sumCandles = historicCandles.stream()
                 .map(candle -> new BigDecimal(candle.getHigh().getUnits() + "." + candle.getHigh().getNano()))
-                .toList();
-        BigDecimal average = new BigDecimal(0);
-        for (BigDecimal b : collect) {
-            average = average.add(b);
-        }
-        BigDecimal result = average.divide(new BigDecimal(String.valueOf(collect.size())), new MathContext(9, RoundingMode.HALF_EVEN));
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return result;
-    }
+        BigDecimal countCandles = new BigDecimal(String.valueOf(historicCandles.size()));
 
-    public void startTrade() {
-        double shortPrice = getAverage(LocalDateTime.now().minusDays(1), LocalDateTime.now(), CandleInterval.CANDLE_INTERVAL_1_MIN).doubleValue();
-        double longPrice = getAverage(LocalDateTime.now().minusDays(10), LocalDateTime.now(), CandleInterval.CANDLE_INTERVAL_1_MIN).doubleValue();
-        if (longPrice > (shortPrice + tax) / 100 * 103) {
-            //продаем
-        }
-        else if (longPrice / 100 * 103 < shortPrice) {
-            //покупаем
-        }
+        return sumCandles.setScale(SCALE, RoundingMode.HALF_EVEN).divide(countCandles, RoundingMode.HALF_EVEN);
     }
 
     @PostConstruct
