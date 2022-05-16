@@ -12,7 +12,6 @@ import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -46,8 +45,9 @@ public class CurrencyService {
     //todo сделать пару между интервалом и сроком линий Cut
 
     // Кол-во одинаковых операций подряд (купил...купил...купил...)
-    private static final short maxStreak = 2;
-    private static final short countStreak = 0;
+    private static final short MAX_STREAK = 5;
+    private short buyStreak = 0;
+    private short saleStreak = 0;
 
     // Уровень ожидаемого дохода %
     // Чем выше уровень, тем реже будут сделки
@@ -55,22 +55,26 @@ public class CurrencyService {
 
     private static final double minProfit = (COMMISSION * 3.0) + TAX + tacticLvl;
 
-
-
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
         double shortCut = getAverage(nowDateTime.minusDays(1), nowDateTime, candleInterval).doubleValue();
         double longCut = getAverage(nowDateTime.minusDays(10), nowDateTime, candleInterval).doubleValue();
 
-        if (longCut > (shortCut * minProfit)) {
+        if (longCut > (shortCut * minProfit) && saleStreak < MAX_STREAK) {
+
             //продаем
+            saleStreak++;
+            buyStreak = 0;
             return;
         }
-        if ((shortCut * minProfit) > longCut) {
+        if ((shortCut * minProfit) > longCut && buyStreak < MAX_STREAK) {
+
             //покупаем
+            buyStreak++;
+            saleStreak = 0;
             return;
         }
-        // Находимся в коридоре, сделок не было
+        System.out.println("Находимся в коридоре, сделок не было");
     }
 
     @SneakyThrows
