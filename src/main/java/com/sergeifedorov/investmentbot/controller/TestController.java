@@ -30,19 +30,19 @@ public class TestController {
 
     @GetMapping
     @RequestMapping("/test2")
-    public String test2() {
-        return currencyService.getAllCurrency().stream().filter(currency -> currency.getTicker().equalsIgnoreCase("CNYRUB_TOM")).findFirst().get().toString();
+    public void test2() {
+        currencyService.tradeTick();
     }
-
-    @GetMapping
-    @RequestMapping("/test3")
-    public String test3() {
-        return currencyService.getLastPrice().toString();
-    }
-
-    @GetMapping
-    @RequestMapping("/test4")
-    public String test4() {
-        return currencyService.getAverage(LocalDateTime.now().minusDays(1), LocalDateTime.now(), CandleInterval.CANDLE_INTERVAL_1_MIN).toString();
-    }
+//
+//    @GetMapping
+//    @RequestMapping("/test3")
+//    public String test3() {
+//        return currencyService.getLastPrice().toString();
+//    }
+//
+//    @GetMapping
+//    @RequestMapping("/test4")
+//    public String test4() {
+//        return currencyService.getAverage(LocalDateTime.now().minusDays(1), LocalDateTime.now(), CandleInterval.CANDLE_INTERVAL_1_MIN).toString();
+//    }
 }

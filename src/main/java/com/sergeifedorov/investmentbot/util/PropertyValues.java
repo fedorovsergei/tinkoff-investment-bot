@@ -17,5 +17,11 @@ public class PropertyValues {
     private String secretToken;
     @Value("${figi}")
     private Collection<String> figi;
+    @Value("${short-period-of-time}")
+    private Integer shortPeriod;
+    @Value("${long-period-of-time}")
+    private Integer longPeriod;
+    @Value("${difference-value}")
+    private Double differenceValue;
 
 }
