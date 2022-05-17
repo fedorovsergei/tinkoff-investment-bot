@@ -1,12 +1,16 @@
 package com.sergeifedorov.investmentbot.service;
 
+import com.sergeifedorov.investmentbot.domain.dto.FigiInfo;
 import com.sergeifedorov.investmentbot.util.PropertyValues;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ru.tinkoff.piapi.contract.v1.*;
+import ru.tinkoff.piapi.contract.v1.CandleInterval;
+import ru.tinkoff.piapi.contract.v1.HistoricCandle;
+import ru.tinkoff.piapi.contract.v1.InstrumentStatus;
+import ru.tinkoff.piapi.contract.v1.LastPrice;
 import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
@@ -60,12 +64,14 @@ public class CurrencyService {
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
         propertyValues.getFigi().forEach(figi -> {
+            System.out.println(figi);
             double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), candleInterval, figi).doubleValue();
             double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), candleInterval, figi).doubleValue();
 
             System.out.println(shortCut);
             System.out.println(longCut);
             System.out.println(getLastPrice(getLastPriceDTO(figi)));
+            System.out.println(figi);
             double difference = longCut / shortCut * 100 - 100;
             log.info(String.valueOf(difference));
             if (difference > propertyValues.getDifferenceValue()) {
@@ -96,5 +102,12 @@ public class CurrencyService {
     @SneakyThrows
     private BigDecimal getLastPrice(List<LastPrice> lastPrices) {
         return new BigDecimal(lastPrices.get(0).getPrice().getUnits() + "." + lastPrices.get(0).getPrice().getNano());
+    }
+
+    @SneakyThrows
+    public List<FigiInfo> getAllCurrencies() {
+        return api.getInstrumentsService().getCurrencies(InstrumentStatus.INSTRUMENT_STATUS_UNSPECIFIED).get()
+                .stream().map(currency -> FigiInfo.builder().figi(currency.getFigi()).name(currency.getName()).build())
+                .toList();
     }
 }

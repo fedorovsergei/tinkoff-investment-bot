@@ -8,9 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.tinkoff.piapi.contract.v1.CandleInterval;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/test")
@@ -33,16 +30,10 @@ public class TestController {
     public void test2() {
         currencyService.tradeTick();
     }
-//
-//    @GetMapping
-//    @RequestMapping("/test3")
-//    public String test3() {
-//        return currencyService.getLastPrice().toString();
-//    }
-//
-//    @GetMapping
-//    @RequestMapping("/test4")
-//    public String test4() {
-//        return currencyService.getAverage(LocalDateTime.now().minusDays(1), LocalDateTime.now(), CandleInterval.CANDLE_INTERVAL_1_MIN).toString();
-//    }
+
+    @GetMapping
+    @RequestMapping("/test3")
+    public String test3() {
+        return currencyService.getAllCurrencies().toString();
+    }
 }
