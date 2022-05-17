@@ -37,19 +37,19 @@ public class CurrencyService {
     private final PropertyValues propertyValues;
     private InvestApi api;
     // Комиссия брокера
-    private static final Double COMMISSION = 0.3;
+//    private static final Double COMMISSION = 0.3;
     // Налог
-    private static final Double TAX = 13.0;
+//    private static final Double TAX = 13.0;
     // Точность чисел
     private static final int SCALE = 9;
     // Частота среднего значения
     // Высокая частота замедляет работу программы, но дает высокую точность среднего значения
-    private static final CandleInterval candleInterval = CandleInterval.CANDLE_INTERVAL_1_MIN;     //todo сделать пару между интервалом и сроком линий Cut
+//    private static final CandleInterval candleInterval = CandleInterval.CANDLE_INTERVAL_1_MIN;     //todo сделать пару между интервалом и сроком линий Cut
     // Уровень ожидаемого дохода %
     // Чем выше уровень, тем реже будут сделки
-    private static final double TACTIC_LVL = 5.0;
-    private static final double MIN_PROFIT = (COMMISSION * 2.0) + TACTIC_LVL;
-    private static final double MIN_SALE_PROFIT = (COMMISSION * 2.0) + TAX + TACTIC_LVL;
+//    private static final double TACTIC_LVL = 5.0;
+//    private static final double MIN_PROFIT = (COMMISSION * 2.0) + TACTIC_LVL;
+//    private static final double MIN_SALE_PROFIT = (COMMISSION * 2.0) + TAX + TACTIC_LVL;
 
     @PostConstruct
     public void postConstructor() {
@@ -59,14 +59,13 @@ public class CurrencyService {
     }
 
     @Scheduled(cron = "0 0/1 * * * *")
-//    @Scheduled(cron = "0 0/5 * * * *")
     @SneakyThrows
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
         getAllCurrencies().forEach(figiInfo -> {
             log.info("идентификатор: " + figiInfo.getFigi());
-            double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), candleInterval, figiInfo.getFigi()).doubleValue();
-            double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), candleInterval, figiInfo.getFigi()).doubleValue();
+            double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), CandleInterval.CANDLE_INTERVAL_1_MIN, figiInfo.getFigi()).doubleValue();
+            double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), CandleInterval.CANDLE_INTERVAL_1_MIN, figiInfo.getFigi()).doubleValue();
             if (longCut != 0.00 && shortCut != 0.00) {
                 log.info("короткое значение: " + shortCut);
                 log.info("длинное значение: " + longCut);
