@@ -63,24 +63,24 @@ public class CurrencyService {
     @SneakyThrows
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
-        propertyValues.getFigi().forEach(figi -> {
-            System.out.println(figi);
-            double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), candleInterval, figi).doubleValue();
-            double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), candleInterval, figi).doubleValue();
-
-            System.out.println(shortCut);
-            System.out.println(longCut);
-            System.out.println(getLastPrice(getLastPriceDTO(figi)));
-            System.out.println(figi);
-            double difference = longCut / shortCut * 100 - 100;
-            log.info(String.valueOf(difference));
-            if (difference > propertyValues.getDifferenceValue()) {
-                log.info("купили за " + (getLastPrice(getLastPriceDTO(figi))));
-//                api.getOrdersService().postOrder(figi, Quotation()) todo покупка
-            } else if (difference < propertyValues.getDifferenceValue() * -1) {
-                log.info("продали за " + (getLastPrice(getLastPriceDTO(figi))));
-            } else {
-                log.info("Находимся в коридоре, сделок не было");
+        getAllCurrencies().forEach(figiInfo -> {
+            log.info("идентификатор: " + figiInfo.getFigi());
+            double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), candleInterval, figiInfo.getFigi()).doubleValue();
+            double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), candleInterval, figiInfo.getFigi()).doubleValue();
+            if (longCut != 0.00 && shortCut != 0.00) {
+                log.info("короткое значение: " + shortCut);
+                log.info("длинное значение: " + longCut);
+                double difference = longCut / shortCut * 100 - 100;
+                log.info("разница значений: " + difference);
+                if (difference > propertyValues.getDifferenceValue()) {
+                    log.info("купили за " + (getLastPrice(getLastPriceDTO(figiInfo.getFigi()))));
+//                api.getOrdersService().postOrder(figiInfo, Quotation()) todo покупка
+                } else if (difference < propertyValues.getDifferenceValue() * -1) {
+                    log.info("продали за " + (getLastPrice(getLastPriceDTO(figiInfo.getFigi()))));
+                } else {
+                    log.info("Находимся в коридоре, сделок не было");
+                }
+                log.info("================");
             }
         });
     }
@@ -89,6 +89,9 @@ public class CurrencyService {
     public BigDecimal getAverage(LocalDateTime start, CandleInterval interval, String figi) {
         ZonedDateTime zdt = start.atZone(ZoneId.systemDefault());
         List<HistoricCandle> historicCandles = api.getMarketDataService().getCandles(figi, zdt.toInstant(), Instant.now(), interval).get();
+        if (historicCandles.isEmpty()) {
+            return BigDecimal.valueOf(0.00);
+        }
         BigDecimal sumCandles = historicCandles.stream().map(candle -> new BigDecimal(candle.getHigh().getUnits() + "." + candle.getHigh().getNano())).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal countCandles = new BigDecimal(String.valueOf(historicCandles.size()));
         return sumCandles.setScale(SCALE, RoundingMode.HALF_EVEN).divide(countCandles, RoundingMode.HALF_EVEN);

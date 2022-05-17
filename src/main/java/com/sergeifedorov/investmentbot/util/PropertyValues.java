@@ -15,8 +15,6 @@ public class PropertyValues {
     private String secretTokenSandbox;
     @Value("${secret-token}")
     private String secretToken;
-    @Value("${figi}")
-    private Collection<String> figi;
     @Value("${short-period-of-time}")
     private Integer shortPeriod;
     @Value("${long-period-of-time}")
