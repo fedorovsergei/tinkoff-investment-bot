@@ -44,34 +44,27 @@ public class CurrencyService {
     private static final CandleInterval candleInterval = CandleInterval.CANDLE_INTERVAL_1_MIN;
     //todo сделать пару между интервалом и сроком линий Cut
 
-    // Кол-во одинаковых операций подряд (купил...купил...купил...)
-    private static final short MAX_STREAK = 5;
-    private short buyStreak = 0;
-    private short saleStreak = 0;
-
     // Уровень ожидаемого дохода %
     // Чем выше уровень, тем реже будут сделки
-    private static final double tacticLvl = 5.0;
+    private static final double TACTIC_LVL = 5.0;
 
-    private static final double minProfit = (COMMISSION * 3.0) + TAX + tacticLvl;
+    private static final double MIN_PROFIT = (COMMISSION * 2.0) + TACTIC_LVL;
+    private static final double MIN_SALE_PROFIT = (COMMISSION * 2.0) + TAX + TACTIC_LVL;
 
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
-        double shortCut = getAverage(nowDateTime.minusDays(1), nowDateTime, candleInterval).doubleValue();
-        double longCut = getAverage(nowDateTime.minusDays(10), nowDateTime, candleInterval).doubleValue();
+        double shortCut = getAverage(nowDateTime.minusHours(1), nowDateTime, candleInterval).doubleValue();
+        double longCut = getAverage(nowDateTime.minusHours(10), nowDateTime, candleInterval).doubleValue();
 
-        if (longCut > (shortCut * minProfit) && saleStreak < MAX_STREAK) {
-
-            //продаем
-            saleStreak++;
-            buyStreak = 0;
-            return;
-        }
-        if ((shortCut * minProfit) > longCut && buyStreak < MAX_STREAK) {
+        double blabla = longCut / shortCut * 100 - 100;
+        if (blabla > 0.3) {
 
             //покупаем
-            buyStreak++;
-            saleStreak = 0;
+            return;
+        }
+        if (blabla < -0.3) {
+
+            //продаем
             return;
         }
         System.out.println("Находимся в коридоре, сделок не было");
