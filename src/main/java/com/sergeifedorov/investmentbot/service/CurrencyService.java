@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.tinkoff.piapi.contract.v1.CandleInterval;
 import ru.tinkoff.piapi.contract.v1.HistoricCandle;
+import ru.tinkoff.piapi.contract.v1.LastPrice;
 import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
@@ -57,18 +58,22 @@ public class CurrencyService {
 
     @Scheduled(cron = "0 0/1 * * * *")
 //    @Scheduled(cron = "0 0/5 * * * *")
+    @SneakyThrows
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
         propertyValues.getFigi().forEach(figi -> {
             double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), candleInterval, figi).doubleValue();
             double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), candleInterval, figi).doubleValue();
 
+            System.out.println(shortCut);
+            System.out.println(longCut);
+            System.out.println(getLastPrice(figi));
             double difference = longCut / shortCut * 100 - 100;
             log.info(String.valueOf(difference));
             if (difference > propertyValues.getDifferenceValue()) {
-                log.info("купили за " + api.getMarketDataService().getLastPrices(Collections.singleton(figi)));
+                log.info("купили за " + getLastPrice(figi));
             } else if (difference < propertyValues.getDifferenceValue() * -1) {
-                log.info("продали за " + api.getMarketDataService().getLastPrices(Collections.singleton(figi)));
+                log.info("продали за " + getLastPrice(figi));
             } else {
                 log.info("Находимся в коридоре, сделок не было");
             }
@@ -82,5 +87,11 @@ public class CurrencyService {
         BigDecimal sumCandles = historicCandles.stream().map(candle -> new BigDecimal(candle.getHigh().getUnits() + "." + candle.getHigh().getNano())).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal countCandles = new BigDecimal(String.valueOf(historicCandles.size()));
         return sumCandles.setScale(SCALE, RoundingMode.HALF_EVEN).divide(countCandles, RoundingMode.HALF_EVEN);
+    }
+
+    @SneakyThrows
+    private BigDecimal getLastPrice(String figi) {
+        List<LastPrice> lastPrices = api.getMarketDataService().getLastPrices(Collections.singleton(figi)).get();
+        return new BigDecimal(lastPrices.get(0).getPrice().getUnits() + "." + lastPrices.get(0).getPrice().getNano());
     }
 }
