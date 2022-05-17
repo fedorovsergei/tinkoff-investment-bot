@@ -6,9 +6,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ru.tinkoff.piapi.contract.v1.CandleInterval;
-import ru.tinkoff.piapi.contract.v1.HistoricCandle;
-import ru.tinkoff.piapi.contract.v1.LastPrice;
+import ru.tinkoff.piapi.contract.v1.*;
 import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
@@ -67,13 +65,14 @@ public class CurrencyService {
 
             System.out.println(shortCut);
             System.out.println(longCut);
-            System.out.println(getLastPrice(figi));
+            System.out.println(getLastPrice(getLastPriceDTO(figi)));
             double difference = longCut / shortCut * 100 - 100;
             log.info(String.valueOf(difference));
             if (difference > propertyValues.getDifferenceValue()) {
-                log.info("купили за " + getLastPrice(figi));
+                log.info("купили за " + (getLastPrice(getLastPriceDTO(figi))));
+//                api.getOrdersService().postOrder(figi, Quotation()) todo покупка
             } else if (difference < propertyValues.getDifferenceValue() * -1) {
-                log.info("продали за " + getLastPrice(figi));
+                log.info("продали за " + (getLastPrice(getLastPriceDTO(figi))));
             } else {
                 log.info("Находимся в коридоре, сделок не было");
             }
@@ -90,8 +89,12 @@ public class CurrencyService {
     }
 
     @SneakyThrows
-    private BigDecimal getLastPrice(String figi) {
-        List<LastPrice> lastPrices = api.getMarketDataService().getLastPrices(Collections.singleton(figi)).get();
+    private List<LastPrice> getLastPriceDTO(String figi) {
+        return api.getMarketDataService().getLastPrices(Collections.singleton(figi)).get();
+    }
+
+    @SneakyThrows
+    private BigDecimal getLastPrice(List<LastPrice> lastPrices) {
         return new BigDecimal(lastPrices.get(0).getPrice().getUnits() + "." + lastPrices.get(0).getPrice().getNano());
     }
 }
