@@ -49,8 +49,8 @@ public class CurrencyService {
 
     @PostConstruct
     public void postConstructor() {
-        String token = propertyValues.getSecretToken();
-//        String token = propertyValues.getSecretTokenSandbox();
+//        String token = propertyValues.getSecretToken();
+        String token = propertyValues.getSecretTokenSandbox();
         api = InvestApi.create(token);
     }
 
