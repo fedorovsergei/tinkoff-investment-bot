@@ -1,7 +1,7 @@
 package com.sergeifedorov.investmentbot.controller;
 
 import com.sergeifedorov.investmentbot.service.AccountService;
-import com.sergeifedorov.investmentbot.service.CurrencyService;
+import com.sergeifedorov.investmentbot.service.TradeService;
 import com.sergeifedorov.investmentbot.service.StockService;
 import com.sergeifedorov.investmentbot.util.PropertyValues;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public class TestController {
 
     private final AccountService accountService;
     private final StockService stockService;
-    private final CurrencyService currencyService;
+    private final TradeService tradeService;
     private final PropertyValues propertyValues;
 
     @GetMapping

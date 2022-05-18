@@ -3,6 +3,7 @@ package com.sergeifedorov.investmentbot.service;
 import com.sergeifedorov.investmentbot.util.PropertyValues;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.tinkoff.piapi.contract.v1.*;
@@ -22,7 +23,7 @@ import static ru.tinkoff.piapi.contract.v1.OrderType.ORDER_TYPE_MARKET;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CurrencyService {
+public class TradeService {
 
     private final PropertyValues propertyValues;
     private final AccountService accountService;
@@ -32,14 +33,13 @@ public class CurrencyService {
     @PostConstruct
     public void postConstructor() {
         String token = propertyValues.getSecretToken();
-//        String token = propertyValues.getSecretTokenSandbox();
         api = InvestApi.create(token);
     }
 
     /**
      * Алгоритм анализа рынка и выставления заявок
      */
-    @Scheduled(cron = "0 0/1 * * * *")
+    @Scheduled(cron = "${time-update}")
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
         propertyValues.getFigis().forEach(figi -> {
