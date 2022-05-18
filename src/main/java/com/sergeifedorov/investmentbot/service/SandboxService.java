@@ -128,7 +128,7 @@ public class SandboxService {
 
     @SneakyThrows
     private PostOrderResponse submittingApplication(OrderDirection operation, String figi, int quantity) {
-        Thread.sleep(500);
+        Thread.sleep(1000);
         Quotation lastPrice = historicCandleNow.getHigh();
         Quotation quotation = Quotation.newBuilder().setUnits(lastPrice.getUnits() * quantity).setNano(lastPrice.getNano() * quantity).build();
         return apiSandBox.getSandboxService().postOrderSync(figi, propertyValues.getBuySize(), quotation, operation,
