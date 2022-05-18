@@ -74,7 +74,7 @@ public class SandboxService {
                 .ofEpochSecond(historicCandle.getTime().getSeconds(), historicCandle.getTime().getNanos())
                 .atZone(ZoneId.systemDefault())));
 
-        for (int i = 50; i < 14400; i++) {
+        for (int i = 50; i < history.size(); i++) {
             double shortCut = getAverage(history, i, propertyValues.getShortPeriod()).doubleValue();
             double longCut = getAverage(history, i, propertyValues.getLongPeriod()).doubleValue();
 
@@ -128,10 +128,11 @@ public class SandboxService {
 
     @SneakyThrows
     private PostOrderResponse submittingApplication(OrderDirection operation, String figi, int quantity) {
-        Thread.sleep(1000);
         Quotation lastPrice = historicCandleNow.getHigh();
         Quotation quotation = Quotation.newBuilder().setUnits(lastPrice.getUnits() * quantity).setNano(lastPrice.getNano() * quantity).build();
-        return apiSandBox.getSandboxService().postOrderSync(figi, propertyValues.getBuySize(), quotation, operation,
+        PostOrderResponse postOrderResponse = apiSandBox.getSandboxService().postOrderSync(figi, propertyValues.getBuySize(), quotation, operation,
                 getSandBoxAcc(), ORDER_TYPE_MARKET, propertyValues.getOrderId());
+        Thread.sleep(1000);
+        return postOrderResponse;
     }
 }
