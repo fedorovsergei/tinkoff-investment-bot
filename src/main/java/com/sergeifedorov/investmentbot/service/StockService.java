@@ -1,11 +1,10 @@
 package com.sergeifedorov.investmentbot.service;
 
+import com.sergeifedorov.investmentbot.domain.dto.FigiInfo;
 import com.sergeifedorov.investmentbot.util.PropertyValues;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
-import ru.tinkoff.piapi.contract.v1.LastPrice;
-import ru.tinkoff.piapi.contract.v1.Share;
 import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
@@ -24,9 +23,13 @@ public class StockService {
         api = InvestApi.create(token);
     }
 
+    /**
+     * Получить список всех акций
+     */
     @SneakyThrows
-    public List<Share> getAllStock() {
-        return api.getInstrumentsService().getAllShares().get();
+    public List<FigiInfo> getAllShares() {
+        return api.getInstrumentsService().getAllSharesSync()
+                .stream().map(currency -> FigiInfo.builder().figi(currency.getFigi()).name(currency.getName()).build())
+                .toList();
     }
-
 }

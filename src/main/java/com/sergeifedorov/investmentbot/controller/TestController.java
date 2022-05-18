@@ -20,38 +20,8 @@ public class TestController {
     private final PropertyValues propertyValues;
 
     @GetMapping
-    @RequestMapping("/test1")
-    public String test1() {
-        return accountService.getActiveAccount().toString();
-    }
-
-    @GetMapping
-    @RequestMapping("/test2")
-    public void test2() {
-        currencyService.tradeTick();
-    }
-
-    @GetMapping
-    @RequestMapping("/test3")
-    public String test3() {
-        return currencyService.getAllCurrencies().toString();
-    }
-
-    @GetMapping
-    @RequestMapping("/test4")
-    public void test4() {
-        currencyService.buy();
-    }
-
-    @GetMapping
-    @RequestMapping("/test5")
-    public void test5() {
-        currencyService.sell();
-    }
-
-    @GetMapping
-    @RequestMapping("/test6")
-    public String test6() {
-       return accountService.getInfo().toString();
+    @RequestMapping("/get-all-shares")
+    public String getAllShares() {
+        return stockService.getAllShares().toString();
     }
 }
