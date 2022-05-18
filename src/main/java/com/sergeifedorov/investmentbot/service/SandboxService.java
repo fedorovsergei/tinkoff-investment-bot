@@ -74,8 +74,7 @@ public class SandboxService {
                 .ofEpochSecond(historicCandle.getTime().getSeconds(), historicCandle.getTime().getNanos())
                 .atZone(ZoneId.systemDefault())));
 
-        for (int i = 50; i < 1440; i++) {
-//        for (int i = 50; i < 14400; i++) {
+        for (int i = 50; i < 14400; i++) {
             double shortCut = getAverage(history, i, propertyValues.getShortPeriod()).doubleValue();
             double longCut = getAverage(history, i, propertyValues.getLongPeriod()).doubleValue();
 
