@@ -59,7 +59,6 @@ public class SandboxService {
      */
     @GetMapping
     @RequestMapping("/test2")
-    @SneakyThrows
     public void testData() {
         log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
 
@@ -96,7 +95,6 @@ public class SandboxService {
                 }
                 log.info("================");
             }
-            Thread.sleep(250);
             if (i % 100 == 0) {
                 log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
             }
@@ -129,7 +127,9 @@ public class SandboxService {
         return submittingApplication(OrderDirection.ORDER_DIRECTION_SELL, figi, quantity);
     }
 
+    @SneakyThrows
     private PostOrderResponse submittingApplication(OrderDirection operation, String figi, int quantity) {
+        Thread.sleep(500);
         Quotation lastPrice = historicCandleNow.getHigh();
         Quotation quotation = Quotation.newBuilder().setUnits(lastPrice.getUnits() * quantity).setNano(lastPrice.getNano() * quantity).build();
         return apiSandBox.getSandboxService().postOrderSync(figi, propertyValues.getBuySize(), quotation, operation,
