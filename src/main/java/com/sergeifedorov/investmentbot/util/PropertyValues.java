@@ -11,8 +11,8 @@ import java.util.List;
 @Getter
 public class PropertyValues {
 
-    @Value("${secret-token-sandbox}")
-    private String secretTokenSandbox;
+//    @Value("${secret-token-sandbox}")
+//    private String secretTokenSandbox;
     @Value("${secret-token}")
     private String secretToken;
     @Value("${short-period-of-time}")

@@ -36,4 +36,22 @@ public class TestController {
     public String test3() {
         return currencyService.getAllCurrencies().toString();
     }
+
+    @GetMapping
+    @RequestMapping("/test4")
+    public void test4() {
+        currencyService.buy();
+    }
+
+    @GetMapping
+    @RequestMapping("/test5")
+    public void test5() {
+        currencyService.sell();
+    }
+
+    @GetMapping
+    @RequestMapping("/test6")
+    public String test6() {
+       return accountService.getInfo().toString();
+    }
 }

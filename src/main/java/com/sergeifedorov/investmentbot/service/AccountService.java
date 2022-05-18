@@ -4,10 +4,7 @@ import com.sergeifedorov.investmentbot.util.PropertyValues;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
-import ru.tinkoff.piapi.contract.v1.Account;
-import ru.tinkoff.piapi.contract.v1.AccountStatus;
-import ru.tinkoff.piapi.contract.v1.AccountType;
-import ru.tinkoff.piapi.contract.v1.Asset;
+import ru.tinkoff.piapi.contract.v1.*;
 import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
@@ -41,5 +38,10 @@ public class AccountService {
     @SneakyThrows
     public List<Asset> getActive() {
         return api.getInstrumentsService().getAssets().get();
+    }
+
+    @SneakyThrows
+    public GetInfoResponse getInfo() {
+        return api.getUserService().getInfo().get();
     }
 }

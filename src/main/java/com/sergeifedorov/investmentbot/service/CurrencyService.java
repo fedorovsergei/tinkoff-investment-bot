@@ -7,10 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ru.tinkoff.piapi.contract.v1.CandleInterval;
-import ru.tinkoff.piapi.contract.v1.HistoricCandle;
-import ru.tinkoff.piapi.contract.v1.InstrumentStatus;
-import ru.tinkoff.piapi.contract.v1.LastPrice;
+import ru.tinkoff.piapi.contract.v1.*;
 import ru.tinkoff.piapi.core.InvestApi;
 
 import javax.annotation.PostConstruct;
@@ -22,6 +19,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+
+import static ru.tinkoff.piapi.contract.v1.OrderType.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,7 @@ public class CurrencyService {
 //    Конкретные значения большой и малой скользящей средней предлагается задавать в настройках алгоритма, либо рассчитывать на исторических данных.
 
     private final PropertyValues propertyValues;
+    private final AccountService accountService;
     private InvestApi api;
     // Комиссия брокера
 //    private static final Double COMMISSION = 0.3;
@@ -53,12 +55,12 @@ public class CurrencyService {
 
     @PostConstruct
     public void postConstructor() {
-//        String token = propertyValues.getSecretToken();
-        String token = propertyValues.getSecretTokenSandbox();
+        String token = propertyValues.getSecretToken();
+//        String token = propertyValues.getSecretTokenSandbox();
         api = InvestApi.create(token);
     }
 
-    @Scheduled(cron = "0 0/1 * * * *")
+    //    @Scheduled(cron = "0 0/1 * * * *")
     @SneakyThrows
     public void tradeTick() {
         LocalDateTime nowDateTime = LocalDateTime.now();
@@ -97,13 +99,13 @@ public class CurrencyService {
     }
 
     @SneakyThrows
-    private List<LastPrice> getLastPriceDTO(String figi) {
-        return api.getMarketDataService().getLastPrices(Collections.singleton(figi)).get();
+    private LastPrice getLastPriceDTO(String figi) {
+        return api.getMarketDataService().getLastPrices(Collections.singleton(figi)).get().get(0);
     }
 
     @SneakyThrows
-    private BigDecimal getLastPrice(List<LastPrice> lastPrices) {
-        return new BigDecimal(lastPrices.get(0).getPrice().getUnits() + "." + lastPrices.get(0).getPrice().getNano());
+    private BigDecimal getLastPrice(LastPrice lastPrices) {
+        return new BigDecimal(lastPrices.getPrice().getUnits() + "." + lastPrices.getPrice().getNano());
     }
 
     @SneakyThrows
@@ -111,5 +113,37 @@ public class CurrencyService {
         return api.getInstrumentsService().getCurrencies(InstrumentStatus.INSTRUMENT_STATUS_UNSPECIFIED).get()
                 .stream().map(currency -> FigiInfo.builder().figi(currency.getFigi()).name(currency.getName()).build())
                 .toList();
+    }
+
+    @SneakyThrows
+    @Scheduled(cron = "0 0/1 * * * *")
+    public void buy() {
+        submittingApplication();
+        System.out.println(submittingApplication(OrderDirection.ORDER_DIRECTION_BUY));
+    }
+
+    @SneakyThrows
+    @Scheduled(cron = "0 0/1 * * * *")
+    public void sell() {
+        submittingApplication(OrderDirection.ORDER_DIRECTION_SELL);
+    }
+
+    @SneakyThrows
+    public String submittingApplication(OrderDirection operation) {
+        String figi = "BBG0013HRTL0";
+//        LastPrice lastPrice = getLastPriceDTO(figi);
+//        Quotation quotation = Quotation.newBuilder().setUnits(lastPrice.getPrice())
+        System.out.println(api.getOrdersService().getOrdersSync(accountService.getActiveAccount().getId()));
+        PostOrderResponse postOrderResponse =  api.getOrdersService().postOrderSync(figi, 1, Quotation.getDefaultInstance(), operation,
+                accountService.getActiveAccount().getId(), ORDER_TYPE_MARKET, "qweasdzxcwersdfxcvertdfgcvb" + new Random().nextInt(10000, 99999));
+        System.out.println(postOrderResponse);
+        return "test";
+    }
+
+    @SneakyThrows
+    public void submittingApplication() {
+
+        System.out.println( api.getOrdersService().getOrders(accountService.getActiveAccount().getId()).get());
+
     }
 }
