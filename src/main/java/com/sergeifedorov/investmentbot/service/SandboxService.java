@@ -61,7 +61,7 @@ public class SandboxService {
     @RequestMapping("/test2")
     @SneakyThrows
     public void testData() {
-        System.out.println(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()));
+        log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
 
         String figi = propertyValues.getFigis().stream().findFirst().get();
         List<HistoricCandle> history = new ArrayList<>();
@@ -75,33 +75,34 @@ public class SandboxService {
                 .ofEpochSecond(historicCandle.getTime().getSeconds(), historicCandle.getTime().getNanos())
                 .atZone(ZoneId.systemDefault())));
 
-        for (int i = 50; i < 14400; i++) {
+        for (int i = 50; i < 1440; i++) {
+//        for (int i = 50; i < 14400; i++) {
             double shortCut = getAverage(history, i, propertyValues.getShortPeriod()).doubleValue();
             double longCut = getAverage(history, i, propertyValues.getLongPeriod()).doubleValue();
 
             if (longCut != 0.00 && shortCut != 0.00) {
                 double difference = longCut / shortCut * 100 - 100;
 
-                log.info("================");
-                log.info("короткое значение: " + shortCut);
-                log.info("длинное значение: " + longCut);
-                log.info("разница значений: " + difference);
-
                 if (difference > propertyValues.getDifferenceValue()) {
-                    log.info("купили за " + (getLastPrice()));
-                    log.info(buy(figi, propertyValues.getBuySize()).getMessage());
+                    if (!buy(figi, propertyValues.getBuySize()).getMessage().isEmpty()) {
+                        log.info("купили за " + (getLastPrice()));
+                    }
                 } else if (difference < propertyValues.getDifferenceValue() * -1) {
-                    log.info("продали за " + (getLastPrice()));
-                    log.info(sell(figi, propertyValues.getBuySize()).getMessage());
+                    if (!sell(figi, propertyValues.getBuySize()).getMessage().isEmpty()) {
+                        log.info("продали за " + (getLastPrice()));
+                    }
                 } else {
                     log.info("Находимся в коридоре, сделок не было");
                 }
                 log.info("================");
             }
-            Thread.sleep(100);
+            Thread.sleep(250);
+            if (i % 100 == 0) {
+                log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
+            }
         }
 
-        System.out.println(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()));
+        log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
     }
 
     private BigDecimal getAverage(List<HistoricCandle> history, int count, int period) {
