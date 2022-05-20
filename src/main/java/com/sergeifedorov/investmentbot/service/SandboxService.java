@@ -46,8 +46,9 @@ public class SandboxService {
     @RequestMapping("/test1")
     @SneakyThrows
     public void start() {
-//        System.out.println(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()));
-//        apiSandBox.getSandboxService().payIn(getSandBoxAcc(), MoneyValue.newBuilder().setCurrency(Currency.getDefaultInstance().getCurrency()).setUnits(10000).build());
+        System.out.println(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()));
+        apiSandBox.getSandboxService().payIn(getSandBoxAcc(), MoneyValue.newBuilder().setCurrency(Currency.getDefaultInstance().getCurrency()).setUnits(10000).build());
+        System.out.println(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()));
     }
 
     private String getSandBoxAcc() {
@@ -60,7 +61,7 @@ public class SandboxService {
     @GetMapping
     @RequestMapping("/test2")
     public void testData() {
-        log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
+        log.info(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()).toString());
 
         String figi = propertyValues.getFigis().stream().findFirst().get();
         List<HistoricCandle> history = new ArrayList<>();
@@ -79,12 +80,11 @@ public class SandboxService {
             double longCut = getAverage(history, i, propertyValues.getLongPeriod()).doubleValue();
 
             if (longCut != 0.00 && shortCut != 0.00) {
-                double difference = longCut / shortCut * 100 - 100;
+                double difference = shortCut / longCut * 100 - 100;
 
                 if (difference > propertyValues.getDifferenceValue()) {
-                    if (!buy(figi, propertyValues.getBuySize()).getMessage().isEmpty()) {
-                        log.info("купили за " + (getLastPrice()));
-                    }
+                    log.info(buy(figi, propertyValues.getBuySize()).getMessage());
+                    log.info("купили за " + (getLastPrice()));
                 } else if (difference < propertyValues.getDifferenceValue() * -1) {
                     if (!sell(figi, propertyValues.getBuySize()).getMessage().isEmpty()) {
                         log.info("продали за " + (getLastPrice()));
@@ -95,11 +95,11 @@ public class SandboxService {
                 log.info("================");
             }
             if (i % 100 == 0) {
-                log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
+                log.info(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()).toString());
             }
         }
 
-        log.info(apiSandBox.getSandboxService().getPortfolioSync(getSandBoxAcc()).toString());
+        log.info(apiSandBox.getSandboxService().getPositionsSync(getSandBoxAcc()).toString());
     }
 
     private BigDecimal getAverage(List<HistoricCandle> history, int count, int period) {
