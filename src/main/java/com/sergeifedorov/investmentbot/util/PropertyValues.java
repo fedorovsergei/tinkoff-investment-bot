@@ -24,6 +24,8 @@ public class PropertyValues {
     private Collection<String> figis;
     @Value("${order-id}")
     private String orderId;
+    @Value("${sand-box-enable}")
+    private boolean sandBoxEnable;
     @Value("${buy-size}")
     private Integer buySize;
 }

@@ -1,9 +1,10 @@
 package com.sergeifedorov.investmentbot.service;
 
+import com.sergeifedorov.investmentbot.repository.CandleHistoryRepo;
+import com.sergeifedorov.investmentbot.repository.TradeTestResultRepo;
 import com.sergeifedorov.investmentbot.util.PropertyValues;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.tinkoff.piapi.contract.v1.*;
@@ -29,6 +30,8 @@ public class TradeService {
     private final AccountService accountService;
     private InvestApi api;
     private static final int SCALE = 9;
+    private final CandleHistoryRepo candleHistoryRepo;
+    private final TradeTestResultRepo tradeTestResultRepo;
 
     @PostConstruct
     public void postConstructor() {
@@ -41,10 +44,11 @@ public class TradeService {
      */
     @Scheduled(cron = "${time-update}")
     public void tradeTick() {
+        log.info("start trade tick");
         LocalDateTime nowDateTime = LocalDateTime.now();
         propertyValues.getFigis().forEach(figi -> {
-            double shortCut = getAverage(nowDateTime.minusMinutes(propertyValues.getShortPeriod()), figi).doubleValue();
-            double longCut = getAverage(nowDateTime.minusMinutes(propertyValues.getLongPeriod()), figi).doubleValue();
+            double shortCut = getShortAverage(figi).doubleValue();
+            double longCut = getLongAverage(figi).doubleValue();
 
             if (longCut != 0.00 && shortCut != 0.00) {
                 double difference = longCut / shortCut * 100 - 100;
@@ -68,7 +72,8 @@ public class TradeService {
         });
     }
 
-    private BigDecimal getAverage(LocalDateTime start, String figi) {
+    public BigDecimal getLongAverage(String figi) {
+        LocalDateTime start = LocalDateTime.now().minusMinutes(propertyValues.getShortPeriod());
         List<HistoricCandle> historicCandles = api.getMarketDataService()
                 .getCandlesSync(figi, start.atZone(ZoneId.systemDefault()).toInstant(), Instant.now(), CandleInterval.CANDLE_INTERVAL_1_MIN);
         if (historicCandles.isEmpty()) {
@@ -81,23 +86,37 @@ public class TradeService {
         return sumCandles.setScale(SCALE, RoundingMode.HALF_EVEN).divide(countCandles, RoundingMode.HALF_EVEN);
     }
 
-    private LastPrice getLastPrice(String figi) {
+    public BigDecimal getShortAverage(String figi) {
+        LocalDateTime start = LocalDateTime.now().minusMinutes(propertyValues.getLongPeriod());
+        List<HistoricCandle> historicCandles = api.getMarketDataService()
+                .getCandlesSync(figi, start.atZone(ZoneId.systemDefault()).toInstant(), Instant.now(), CandleInterval.CANDLE_INTERVAL_1_MIN);
+        if (historicCandles.isEmpty()) {
+            return BigDecimal.valueOf(0.00);
+        }
+        BigDecimal sumCandles = historicCandles.stream()
+                .map(candle -> new BigDecimal(candle.getHigh().getUnits() + "." + candle.getHigh().getNano()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal countCandles = new BigDecimal(String.valueOf(historicCandles.size()));
+        return sumCandles.setScale(SCALE, RoundingMode.HALF_EVEN).divide(countCandles, RoundingMode.HALF_EVEN);
+    }
+
+    public LastPrice getLastPrice(String figi) {
         return api.getMarketDataService().getLastPricesSync(Collections.singleton(figi)).get(0);
     }
 
-    private BigDecimal getLastPriceValue(LastPrice lastPrices) {
+    public BigDecimal getLastPriceValue(LastPrice lastPrices) {
         return new BigDecimal(lastPrices.getPrice().getUnits() + "." + lastPrices.getPrice().getNano());
     }
 
-    private PostOrderResponse buy(String figi, int quantity) {
+    public PostOrderResponse buy(String figi, int quantity) {
         return submittingApplication(OrderDirection.ORDER_DIRECTION_BUY, figi, quantity);
     }
 
-    private PostOrderResponse sell(String figi, int quantity) {
+    public PostOrderResponse sell(String figi, int quantity) {
         return submittingApplication(OrderDirection.ORDER_DIRECTION_SELL, figi, quantity);
     }
 
-    private PostOrderResponse submittingApplication(OrderDirection operation, String figi, int quantity) {
+    public PostOrderResponse submittingApplication(OrderDirection operation, String figi, int quantity) {
         Quotation lastPrice = getLastPrice(figi).getPrice();
         Quotation quotation = Quotation.newBuilder().setUnits(lastPrice.getUnits() * quantity).setNano(lastPrice.getNano() * quantity).build();
         return api.getOrdersService().postOrderSync(figi, quantity, quotation, operation,
