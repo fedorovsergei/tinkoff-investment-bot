@@ -45,14 +45,17 @@ public class TradeService {
     @Scheduled(cron = "${time-update}")
     public void tradeTick() {
         log.info("start trade tick");
-        LocalDateTime nowDateTime = LocalDateTime.now();
         propertyValues.getFigis().forEach(figi -> {
             double shortCut = getShortAverage(figi).doubleValue();
             double longCut = getLongAverage(figi).doubleValue();
 
+            log.info(String.valueOf(shortCut));
+            log.info(String.valueOf(longCut));
+            System.out.println(shortCut);
+            System.out.println(longCut);
             if (longCut != 0.00 && shortCut != 0.00) {
                 double difference = longCut / shortCut * 100 - 100;
-
+                System.out.println(difference);
                 log.info("================");
                 log.info("короткое значение: " + shortCut);
                 log.info("длинное значение: " + longCut);

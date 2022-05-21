@@ -45,9 +45,10 @@ class InvestmentBotApplicationTests {
     private PropertyValues propertyValues;
 
     @Test
-    void contextLoads() {
+    void testStrategy() {
+        tradeTestResultRepo.deleteAll();
         List<CandleHistory> candleHistories = candleHistoryRepo.findAll();
-        for (int i = 100; i < candleHistories.size(); i++) {
+        for (int i = 100; i < 2000; i++) {
             CandleHistory candleHistory = candleHistories.get(i);
             when(tradeService.getLastPrice(anyString())).thenReturn(getLastPrice(candleHistory));
             when(propertyValues.getFigis()).thenReturn(Collections.singleton(getFigi()));
@@ -71,7 +72,7 @@ class InvestmentBotApplicationTests {
                 result[0] = result[0].subtract(new BigDecimal(tradeTestResult.getUnit() + "." + tradeTestResult.getNano()));
             }
         });
-        log.info(String.valueOf(result[0].doubleValue()));
+        log.info(String.valueOf(result[0].toString()));
         assertTrue(result[0].doubleValue() > 0);
     }
 
@@ -96,7 +97,6 @@ class InvestmentBotApplicationTests {
     }
 
     LastPrice getLastPrice(CandleHistory candleHistory) {
-        log.info("start generate lastPrice");
         Quotation quotation = Quotation.newBuilder().setUnits(candleHistory.getUnit()).setNano(candleHistory.getNano()).build();
         return LastPrice.newBuilder().setPrice(quotation).setFigi(candleHistory.getFigi()).build();
     }
