@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class TestController {
+public class AdminController {
 
     private final AccountService accountService;
     private final StockService stockService;
