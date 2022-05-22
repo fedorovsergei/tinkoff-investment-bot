@@ -6,6 +6,7 @@ import com.sergeifedorov.investmentbot.repository.CandleHistoryRepo;
 import com.sergeifedorov.investmentbot.repository.TradeTestRepo;
 import com.sergeifedorov.investmentbot.repository.TradeTestResultRepo;
 import com.sergeifedorov.investmentbot.util.PropertyValues;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.tinkoff.piapi.contract.v1.*;
 
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -22,23 +24,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RestController
 @RequestMapping("/test2")
 @Slf4j
+@RequiredArgsConstructor
+@Transactional
 class SandboxService {
 
-    @Autowired
-    private TradeService tradeService;
     private static final int SCALE = 9;
-
-    @Autowired
-    private CandleHistoryRepo candleHistoryRepo;
-
-    @Autowired
-    private TradeTestResultRepo tradeTestResultRepo;
-
-    @Autowired
-    private PropertyValues propertyValues;
-
-    @Autowired
-    private TradeTestRepo tradeTestRepo;
+    private final CandleHistoryRepo candleHistoryRepo;
+    private final TradeTestResultRepo tradeTestResultRepo;
+    private final PropertyValues propertyValues;
+    private final TradeTestRepo tradeTestRepo;
 
     @GetMapping
     void testStrategy() {
